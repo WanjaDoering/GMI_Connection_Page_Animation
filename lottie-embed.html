@@ -24,17 +24,42 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
 <script>
-  // Renames mit Leerzeichen brauchen URL-Encoding (%20)
-  // Pfad relativ zur HTML-Datei — JSON liegt im gleichen Ordner
-  lottie.loadAnimation({
-    container: document.getElementById('lottie-container'),
-    renderer: 'svg',
-    loop: true,
-    autoplay: true,
-    path: 'Connection%20Page%20Header%20Animation.json',
-    rendererSettings: {
-      preserveAspectRatio: 'xMidYMid meet',
-      progressiveLoad: true
+  // Desktop = horizontale Animation (links nach rechts)
+  // Mobile  = vertikale Animation (oben nach unten) — Datei muss aus AE exportiert werden
+  const DESKTOP_JSON = 'Connection%20Page%20Header%20Animation.json';
+  const MOBILE_JSON  = 'Connection%20Page%20Header%20Animation%20-%20Mobile.json';
+
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  const primaryPath = isMobile ? MOBILE_JSON : DESKTOP_JSON;
+
+  const container = document.getElementById('lottie-container');
+
+  function loadLottie(path) {
+    const anim = lottie.loadAnimation({
+      container: container,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: path,
+      rendererSettings: {
+        preserveAspectRatio: 'xMidYMid meet',
+        progressiveLoad: true
+      }
+    });
+    return anim;
+  }
+
+  const anim = loadLottie(primaryPath);
+
+  // Fallback: wenn die Mobile-JSON noch nicht existiert (z.B. Build vor AE-Export),
+  // lade stattdessen die Desktop-Version, damit nichts kaputt aussieht.
+  anim.addEventListener('data_failed', () => {
+    if (primaryPath === MOBILE_JSON) {
+      console.warn('[lottie-embed] Mobile JSON not found — falling back to desktop animation.');
+      container.innerHTML = '';
+      loadLottie(DESKTOP_JSON);
+    } else {
+      console.error('[lottie-embed] Desktop JSON failed to load. Check path/CORS.');
     }
   });
 </script>
